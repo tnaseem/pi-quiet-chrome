@@ -1,5 +1,6 @@
 import type { AssistantMessage, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import { basename } from "node:path";
 
 /**
  * Powerline-style status bar under the input.
@@ -45,7 +46,9 @@ export default function (pi: ExtensionAPI) {
           const model = ctx.model?.id?.split("/").pop() || "no-model";
           const provider = ctx.model?.provider || "provider";
           const level = pi.getThinkingLevel();
-          const branch = footerData.getGitBranch() || "project";
+          // Outside a git repo, fall back to the folder name with a directory icon
+          const branch = footerData.getGitBranch();
+          const centre = branch ? ` ${branch}` : ` ${basename(process.cwd())}`;
           const contextUsage = ctx.getContextUsage();
           const usedTokens = contextUsage?.tokens ?? 0;
           const contextWindow = contextUsage?.contextWindow ?? ctx.model?.contextWindow ?? 0;
@@ -79,7 +82,7 @@ export default function (pi: ExtensionAPI) {
             theme.fg("dim", `$${totalCost.toFixed(2)}`),
           ];
 
-          const centreStr = theme.fg("mdCode", " " + branch);
+          const centreStr = theme.fg("mdCode", centre);
 
           const line = (barSize: number): string => {
             const edge = " ".repeat(EDGE_PADDING);
